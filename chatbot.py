@@ -1,30 +1,37 @@
 import streamlit as st
 import google.generativeai as genai
+import os
 
-st.markdown("# Simple Chat Bot Page ?")
-st.sidebar.markdown("# Chat Bot Page ?")
-
+# Setup
 GOOGLE_API_KEY = "AIzaSyCpjFcOYHzS_HR-gPW1M3OraEMTwevAFI4"
-genai.configure(apt_key = GOOGLE_API_KEY)
-geminiModel = genai.GenerativeModel("gemini-pro")
-chat = geminiModel.start_chat(history=[])
+genai.configure(api_key=GOOGLE_API_KEY)
+model = genai.GenerativeModel("gemini-pro")
+chat = model.start_chat(history=[])
+
+# UI Layout
+st.set_page_config(page_title="Simple ChatBot")
+st.markdown("# 💬 Simple Chat Bot")
+st.sidebar.markdown("## 🤖 Chat Bot Controls")
+
+# Function to get response
 def get_gemini_response(query):
-       instantResponse = chat.send_message(query, stream=True)
-       return instantResponse
+    response = chat.send_message(query, stream=True)
+    return response
 
-st.header("Simple ChatBot")
+# Input/Response Handling
 if 'chat_history' not in st.session_state:
-        st.session_state['chat_history'] = []
-inputText = st.text_input("Input: ", key="input")
-submitButton = st.button("Get Instant Answers")
+    st.session_state['chat_history'] = []
 
-if submitButton and inputText:
-        output=get_gemini_response(inputText)
-        st.session_state['chat_history'].append(("You", inputText))
-        st.subheader("The Response is")
-        for outputChunk in output:
-            st.write(outputChunk.text)
-            st.session_state['chat_history'].append(("Bot", outputChunk.text))
-st.subheader("The Chat History is")
-for role, text in st.session_state['chat_history']:
-       st.write(f"{role}: {text}")
+input_text = st.text_input("Type your message:", key="input")
+if st.button("Send") and input_text:
+    st.session_state['chat_history'].append(("You", input_text))
+    response = get_gemini_response(input_text)
+    st.subheader("🤖 Response:")
+    for chunk in response:
+        st.write(chunk.text)
+        st.session_state['chat_history'].append(("Bot", chunk.text))
+
+# Chat History
+st.subheader("📝 Chat History")
+for role, message in st.session_state['chat_history']:
+    st.write(f"**{role}**: {message}")
